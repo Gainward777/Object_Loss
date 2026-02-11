@@ -1,4 +1,4 @@
-## Ответ 1
+## Краткое описание функций
 
 Ниже — кратко, что делает каждая функция и зачем она нужна (все работают **на уже посчитанных эмбеддингах**).
 
@@ -13,11 +13,11 @@
 
 ### Общие лоссы (строительные блоки)
 - **`feature_match_loss(pred, target, kind, ...)`** — *приблизить к GT*: “перцептуальный” матчинг в feature‑пространстве (полезно для формы/геометрии).
-- **`contrastive_pair_loss(z1, z2, y, margin, ...)`** — *пары тянуть/толкать*: классический contrastive loss (позитивы ближе, негативи дальше маржи). ([lecun.com](https://lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf?utm_source=chatgpt.com))
-- **`triplet_margin_loss(anchor, positive, negative, margin, ...)`** — *ранжировать тройкой*: заставляет `d(a,p) + m < d(a,n)` (triplet loss). ([arxiv.org](https://arxiv.org/abs/1503.03832?utm_source=chatgpt.com))
-- **`margin_ranking_on_distances(d_pos, d_neg, margin, ...)`** — *hinge на дистанциях*: то же ранжирование, но когда расстояния уже посчитаны. ([docs.pytorch.org](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.margin_ranking_loss.html?utm_source=chatgpt.com))
+- **`contrastive_pair_loss(z1, z2, y, margin, ...)`** — *пары тянуть/толкать*: классический contrastive loss (позитивы ближе, негативи дальше маржи). ([lecun.com](https://lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf))
+- **`triplet_margin_loss(anchor, positive, negative, margin, ...)`** — *ранжировать тройкой*: заставляет `d(a,p) + m < d(a,n)` (triplet loss). ([arxiv.org](https://arxiv.org/abs/1503.03832))
+- **`margin_ranking_on_distances(d_pos, d_neg, margin, ...)`** — *hinge на дистанциях*: то же ранжирование, но когда расстояния уже посчитаны. ([docs.pytorch.org](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.margin_ranking_loss.html))
 - **`multi_negative_ranking_loss(a, p, negs, margin, ...)`** — *ранжировать против многих*: триплет‑идея, но с несколькими негативами и их агрегацией (mean/max/sum).
-- **`info_nce_loss(anchor, positive, negatives, temperature, ...)`** — *выбрать позитив среди негативов*: InfoNCE как cross‑entropy по similarity‑логитам (в т.ч. in‑batch negatives). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive/?utm_source=chatgpt.com))
+- **`info_nce_loss(anchor, positive, negatives, temperature, ...)`** — *выбрать позитив среди негативов*: InfoNCE как cross‑entropy по similarity‑логитам (в т.ч. in‑batch negatives). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive))
 
 ### Три “прикладных” пункта под вашу задачу
 - **`loss_no_edit_identity(z_pred, z_gt, z_src, ...)`** — *наказать “ничего не поменял”*: делает `pred` ближе к `GT`, чем к `source` (борется с пунктом 1).
@@ -26,9 +26,7 @@
 
 ---
 
-## Ответ 2
-
-## 1) Аргументы каждой функции — что есть что
+## Принимаемые аргументы — что есть что
 
 Нотация:  
 - **`pred` / `z_pred`** — эмбеддинг *текущего результата модели* (то, что “с ошибкой”, потому что ещё не GT).  
@@ -75,18 +73,18 @@
 - **`contrastive_pair_loss(z1, z2, y, margin, ...)`**  
   - `z1`, `z2`: пара эмбеддингов  
   - `y`: метка пары (`1` = позитив → сблизить; `0` = негатив → раздвинуть минимум на `margin`)  
-  - *Зачем*: классический **pairwise contrastive**. ([lecun.com](https://lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf?utm_source=chatgpt.com))
+  - *Зачем*: классический **pairwise contrastive**. ([lecun.com](https://lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf))
 
 - **`triplet_margin_loss(anchor, positive, negative, margin, ...)`**  
   - `anchor`: “опорный” (в вашей задаче чаще всего **`pred`**)  
   - `positive`: **`gt`** (должен быть ближе к anchor)  
   - `negative`: **`src`** или **`overlay`** (должен быть дальше)  
-  - *Зачем*: enforce `d(a,p)+m < d(a,n)` (triplet). ([cv-foundation.org](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Schroff_FaceNet_A_Unified_2015_CVPR_paper.pdf?utm_source=chatgpt.com))
+  - *Зачем*: enforce `d(a,p)+m < d(a,n)` (triplet). ([cv-foundation.org](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Schroff_FaceNet_A_Unified_2015_CVPR_paper.pdf))
 
 - **`margin_ranking_on_distances(d_pos, d_neg, margin, ...)`**  
   - `d_pos`: расстояние “правильной” пары (должно быть **меньше**)  
   - `d_neg`: расстояние “неправильной” пары (должно быть **больше**)  
-  - *Зачем*: то же, что triplet-hinge, но когда вы заранее посчитали расстояния. ([docs.pytorch.org](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.margin_ranking_loss.html?utm_source=chatgpt.com))
+  - *Зачем*: то же, что triplet-hinge, но когда вы заранее посчитали расстояния. ([docs.pytorch.org](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.margin_ranking_loss.html))
 
 - **`multi_negative_ranking_loss(z_anchor, z_positive, z_negs, ...)`**  
   - `z_anchor`: обычно **`pred`**  
@@ -100,7 +98,7 @@
   - `positive`: **`gt`**  
   - `negatives`: либо явные `[B,K,D]`, либо `None` → in-batch negatives  
   - `temperature`: “острота” softmax  
-  - *Зачем*: классифицировать позитив среди негативов (InfoNCE). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive/?utm_source=chatgpt.com))
+  - *Зачем*: классифицировать позитив среди негативов (InfoNCE). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive))
 
 ### Три прикладных лосса под ваши симптомы
 - **`loss_no_edit_identity(z_pred, z_gt, z_src, ...)`**  
@@ -122,9 +120,7 @@
 
 ---
 
-## 2) Короткие рецепты сборки
-
-Ниже — “сборки” (ты сам выставишь коэффициенты `w*` и выберешь эмбеддеры).
+## Примеры сборки
 
 ### Рецепт A — “заставить редактировать” (минимальный)
 Если главная боль — **иногда не происходит замена**:
@@ -166,4 +162,4 @@ L = w_rank * multi_negative_ranking_loss(
 L = (w_nce  * info_nce_loss(z_pred, z_gt, negatives=[z_src, z_overlay], temperature=0.07) +
      w_geom * loss_geometry_match(z_pred_geom, z_gt_geom, kind="l2"))
 ```
-InfoNCE обычно хорошо работает, когда негативов много (в т.ч. in-batch). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive/?utm_source=chatgpt.com))
+InfoNCE обычно хорошо работает, когда негативов много (в т.ч. in-batch). ([lilianweng.github.io](https://lilianweng.github.io/posts/2021-05-31-contrastive))
