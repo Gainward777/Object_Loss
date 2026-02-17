@@ -1,3 +1,11 @@
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Literal, Optional, Tuple
+
+import torch
+import torch.nn.functional as F
+
+
 # -----------------------
 # Focal length utilities
 # -----------------------
